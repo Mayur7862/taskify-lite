@@ -10,7 +10,7 @@ type Project = {
   completedTasks: number;
 };
 
-export default function ProjectCard({ p }: { p: Project }) {
+export default function ProjectCard({ p, onOpen }: { p: Project; onOpen: () => void }) {
   const pct =
     p.taskCount > 0 ? Math.min(100, Math.round((p.completedTasks / p.taskCount) * 100)) : 0;
 
@@ -43,7 +43,10 @@ export default function ProjectCard({ p }: { p: Project }) {
         )}
       </div>
       <div className="px-4 pb-4">
-        <button className="mt-2 text-xs text-indigo-600 hover:text-indigo-700 hover:underline">
+        <button
+          onClick={onOpen}
+          className="mt-2 text-xs text-indigo-600 hover:text-indigo-700 hover:underline"
+        >
           View details
         </button>
       </div>

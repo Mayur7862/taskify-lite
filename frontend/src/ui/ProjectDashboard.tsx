@@ -5,6 +5,7 @@ import ProjectForm from "./ProjectForm";
 import Modal from "./Modal";
 import Button from "./Button";
 import ProjectCard from "./ProjectCard";
+import ProjectDetails from "./ProjectDetails";
 
 type Status = "ALL" | "ACTIVE" | "COMPLETED" | "ON_HOLD";
 
@@ -12,6 +13,7 @@ export default function ProjectDashboard() {
   const { data, loading, error } = useQuery(LIST_PROJECTS);
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState<Status>("ALL");
+  const [selected, setSelected] = useState<any | null>(null);
 
   const projects = data?.projects ?? [];
   const filtered = useMemo(
@@ -51,7 +53,7 @@ export default function ProjectDashboard() {
         </div>
       </div>
 
-      {/* Empty state */}
+      {/* Empty state / Grid */}
       {filtered.length === 0 ? (
         <div className="rounded-2xl border bg-white/70 backdrop-blur p-10 text-center">
           <div className="mx-auto h-12 w-12 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 opacity-90 mb-3"></div>
@@ -61,15 +63,20 @@ export default function ProjectDashboard() {
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filtered.map((p: any) => (
-            <ProjectCard key={p.id} p={p} />
-          ))}
+         {filtered.map((p: any) => (
+  <ProjectCard key={p.id} p={p} onOpen={() => setSelected(p)} />
+))}
         </div>
       )}
 
-      {/* Modal for form */}
+      {/* Create Project Modal */}
       <Modal open={showForm} onClose={() => setShowForm(false)} title="Create Project">
         <ProjectForm onClose={() => setShowForm(false)} />
+      </Modal>
+
+      {/* Project Details Modal (Tasks list) */}
+      <Modal open={!!selected} onClose={() => setSelected(null)} title={selected?.name}>
+        {selected && <ProjectDetails project={selected} />}
       </Modal>
 
       {/* FAB */}
