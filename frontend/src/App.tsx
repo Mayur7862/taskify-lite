@@ -1,30 +1,25 @@
+import TopBar from "./ui/TopBar";
 import OrgPicker from "./ui/OrgPicker";
-import ProjectDashboard from "./ui/ProjectDashboard";
+import ProjectsSimple from "./ui/ProjectsSimple";
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-white">
-      <header className="sticky top-0 z-20 backdrop-blur bg-white/70 border-b">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 shadow"></div>
-            <h1 className="text-xl font-bold tracking-tight">
-              Mini <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-fuchsia-600">PM</span>
-            </h1>
-          </div>
-          <div className="flex-1 min-w-[280px]">
-            <OrgPicker />
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <TopBar />
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <ProjectDashboard />
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 py-6 space-y-6">
+        {/* Organization header row */}
+        <section className="rounded-2xl border bg-white shadow-sm p-4">
+          <OrgPicker />
+        </section>
+
+        {/* Projects area */}
+        <section className="space-y-2">
+          <h2 className="text-2xl font-semibold tracking-tight">Projects</h2>
+          <p className="text-sm text-gray-500">Organize work by goals, owners, and timelines.</p>
+          <ProjectsSimple />
+        </section>
       </main>
-
-      <footer className="py-8 text-center text-xs text-gray-500">
-        Built with Django · GraphQL · React
-      </footer>
     </div>
   );
 }

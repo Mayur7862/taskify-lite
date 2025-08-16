@@ -130,7 +130,7 @@ export default function ProjectDetails({ project }: { project: Project }) {
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className={`rounded-2xl border bg-white/70 backdrop-blur p-3 min-h-[120px] transition ${
+                    className={`rounded-2xl border bg-white p-3 min-h-[420px] transition ${
                       snapshot.isDraggingOver ? "ring-2 ring-indigo-300" : ""
                     }`}
                   >
@@ -142,12 +142,11 @@ export default function ProjectDetails({ project }: { project: Project }) {
                     <div className="space-y-2">
                       {board[col.key].map((t, idx) => (
                         <Draggable key={String(t.id)} draggableId={String(t.id)} index={idx}>
-                          {(dragProvided, dragSnapshot) => (
+                          {(dragProvided) => (
                             <div
                               ref={dragProvided.innerRef}
                               {...dragProvided.draggableProps}
                               {...dragProvided.dragHandleProps}
-                              className={`${dragSnapshot.isDragging ? "rotate-[0.5deg] shadow-lg" : ""}`}
                               onClick={() => setSelected(t)}
                             >
                               <TaskCard t={t} />
@@ -176,7 +175,6 @@ export default function ProjectDetails({ project }: { project: Project }) {
             projectId={project.id}
             onClose={() => {
               setSelected(null);
-              // after closing the editor, refetch to be sure
               setTimeout(() => refetch(), 0);
             }}
           />
