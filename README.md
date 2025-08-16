@@ -1,4 +1,4 @@
-# Mini PM — API Documentation (GraphQL) + Model/Interface Mapping
+# Taskify-lite: A minimal project manager application
 
 > **Scope**: Practical, detailed API docs for local development. Includes multi‑tenancy rules, schema objects, queries/mutations with examples, error patterns, and mappings to Django models & frontend TypeScript interfaces.
 
