@@ -77,6 +77,12 @@ export const UPDATE_TASK = gql`
         assigneeEmail
         dueDate
         createdAt
+        comments {
+          id
+          content
+          authorEmail
+          createdAt
+        }
       }
     }
   }

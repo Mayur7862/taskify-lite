@@ -8,17 +8,14 @@ const httpLink = createHttpLink({
 
 const orgLink = setContext((_, { headers }) => {
   const orgSlug = localStorage.getItem("orgSlug") || "";
-  const nextHeaders: Record<string, string> = { ...(headers as Record<string, string>) };
-  // Only send the custom header when we actually have a value
-  if (orgSlug) nextHeaders["X-Org-Slug"] = orgSlug;
-  return { headers: nextHeaders };
+  const next: Record<string, string> = { ...(headers as Record<string, string>) };
+  if (orgSlug) next["X-Org-Slug"] = orgSlug;
+  return { headers: next };
 });
 
 const errorLink = onError(({ graphQLErrors, networkError }) => {
-  if (graphQLErrors) {
-    for (const err of graphQLErrors) console.error("[GraphQL error]", err.message);
-  }
-  if (networkError) console.error("[Network error]", networkError);
+  if (graphQLErrors) graphQLErrors.forEach(e => console.error("[GraphQL]", e.message));
+  if (networkError) console.error("[Network]", networkError);
 });
 
 export const client = new ApolloClient({

@@ -5,7 +5,9 @@ import TaskCard from "./TaskCard";
 import Modal from "./Modal";
 import TaskForm from "./TaskForm";
 import Button from "./Button";
-import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import TaskEditor from "./TaskEditor";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import type { DropResult } from "@hello-pangea/dnd";
 
 type Project = {
   id: string;
@@ -18,13 +20,14 @@ type Project = {
 };
 
 type Task = {
-  id: string;
+  id: string | number;
   title: string;
   description?: string | null;
   status: "TODO" | "IN_PROGRESS" | "DONE";
   assigneeEmail?: string | null;
   dueDate?: string | null;
   createdAt?: string | null;
+  comments?: { id: string; content: string; authorEmail: string; createdAt?: string | null }[];
 };
 
 const COLUMNS: { key: Task["status"]; title: string }[] = [
@@ -36,18 +39,23 @@ const COLUMNS: { key: Task["status"]; title: string }[] = [
 export default function ProjectDetails({ project }: { project: Project }) {
   const { data, loading, error, refetch } = useQuery(TASKS, {
     variables: { projectId: project.id },
+    fetchPolicy: "cache-and-network",
   });
+
   const [board, setBoard] = useState<Record<Task["status"], Task[]>>({
     TODO: [],
     IN_PROGRESS: [],
     DONE: [],
   });
   const [showTaskForm, setShowTaskForm] = useState(false);
-
+  const [selected, setSelected] = useState<Task | null>(null);
   const [updateTask] = useMutation(UPDATE_TASK);
 
-  // sync board from query
-  const tasks: Task[] = useMemo(() => data?.tasks ?? [], [data]);
+  const tasks: Task[] = useMemo(
+    () => (data?.tasks ?? []).map((t: any) => ({ ...t, id: String(t.id) })),
+    [data]
+  );
+
   useEffect(() => {
     setBoard({
       TODO: tasks.filter((t) => t.status === "TODO"),
@@ -64,11 +72,9 @@ export default function ProjectDetails({ project }: { project: Project }) {
     const dstCol = destination.droppableId as Task["status"];
     if (srcCol === dstCol && source.index === destination.index) return;
 
-    // find the task
     const moving = board[srcCol][source.index];
     if (!moving) return;
 
-    // update local state immediately
     setBoard((prev) => {
       const next = { ...prev };
       const srcList = Array.from(next[srcCol]);
@@ -80,22 +86,20 @@ export default function ProjectDetails({ project }: { project: Project }) {
       return next;
     });
 
-    // if status changed, call mutation (optimistic)
     if (srcCol !== dstCol) {
       try {
         await updateTask({
-          variables: { id: draggableId, status: dstCol },
+          variables: { id: String(draggableId), status: dstCol },
           optimisticResponse: {
             updateTask: {
               ok: true,
               __typename: "UpdateTask",
-              task: { __typename: "TaskType", ...moving, status: dstCol },
+              task: { __typename: "TaskType", ...moving, id: String(moving.id), status: dstCol },
             },
           },
         });
-      } catch (err) {
-        console.error(err);
-        // fallback: refetch to realign
+      } catch (e) {
+        console.error(e);
         refetch();
       }
     }
@@ -106,14 +110,10 @@ export default function ProjectDetails({ project }: { project: Project }) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="text-xl font-semibold">{project.name}</h3>
-          {project.description && (
-            <p className="text-sm text-gray-600 mt-1">{project.description}</p>
-          )}
+          {project.description && <p className="text-sm text-gray-600 mt-1">{project.description}</p>}
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={() => refetch()}>
-            Refresh
-          </Button>
+          <Button variant="secondary" onClick={() => refetch()}>Refresh</Button>
           <Button onClick={() => setShowTaskForm(true)}>New Task</Button>
         </div>
       </div>
@@ -136,22 +136,19 @@ export default function ProjectDetails({ project }: { project: Project }) {
                   >
                     <div className="mb-2 flex items-center justify-between">
                       <h4 className="text-sm font-semibold text-gray-700">{col.title}</h4>
-                      <span className="text-[10px] text-gray-500">
-                        {board[col.key].length}
-                      </span>
+                      <span className="text-[10px] text-gray-500">{board[col.key].length}</span>
                     </div>
 
                     <div className="space-y-2">
                       {board[col.key].map((t, idx) => (
-                        <Draggable key={t.id} draggableId={t.id} index={idx}>
+                        <Draggable key={String(t.id)} draggableId={String(t.id)} index={idx}>
                           {(dragProvided, dragSnapshot) => (
                             <div
                               ref={dragProvided.innerRef}
                               {...dragProvided.draggableProps}
                               {...dragProvided.dragHandleProps}
-                              className={`${
-                                dragSnapshot.isDragging ? "rotate-[0.5deg] shadow-lg" : ""
-                              }`}
+                              className={`${dragSnapshot.isDragging ? "rotate-[0.5deg] shadow-lg" : ""}`}
+                              onClick={() => setSelected(t)}
                             >
                               <TaskCard t={t} />
                             </div>
@@ -168,12 +165,22 @@ export default function ProjectDetails({ project }: { project: Project }) {
         </DragDropContext>
       )}
 
-      <Modal
-        open={showTaskForm}
-        onClose={() => setShowTaskForm(false)}
-        title="Create Task"
-      >
+      <Modal open={showTaskForm} onClose={() => setShowTaskForm(false)} title="Create Task">
         <TaskForm projectId={project.id} onClose={() => setShowTaskForm(false)} />
+      </Modal>
+
+      <Modal open={!!selected} onClose={() => setSelected(null)} title="Edit Task">
+        {selected && (
+          <TaskEditor
+            task={selected}
+            projectId={project.id}
+            onClose={() => {
+              setSelected(null);
+              // after closing the editor, refetch to be sure
+              setTimeout(() => refetch(), 0);
+            }}
+          />
+        )}
       </Modal>
     </div>
   );
