@@ -8,8 +8,6 @@
 
 ---
 
----
-
 ## 2) Architecture — Clean Separation & Abstractions
 
 ```
