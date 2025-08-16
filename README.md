@@ -8,7 +8,7 @@
 
 ---
 
-## 2) Architecture — Clean Separation & Abstractions
+## Architecture — Clean Separation & Abstractions
 
 ```
 repo/
